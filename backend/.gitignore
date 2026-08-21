@@ -1,0 +1,42 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+/dist/
+/build/
+
+# Coverage
+/coverage/
+
+# Bun lock
+bun.lockb
+
+# Environment — never commit real values
+.env
+.env.local
+.env.*.local
+
+# TLS keys — NEVER commit these
+certs/
+*.key
+*.pem
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+*.suo
+*.sw?
+
+# Logs
+*.log
+npm-debug.log*
+
+AI_*
+ALLIN*
+*.pdf
+*.docs
+GEMINI.md
+AGENTs.md

@@ -1,0 +1,1 @@
+// @WebScoketGateway, property scoped rooms

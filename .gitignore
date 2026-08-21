@@ -1,0 +1,44 @@
+# Dependencies
+node_modules/
+.pnp
+.pnp.js
+
+# Build output
+dist/
+build/
+
+# Coverage
+coverage/
+
+# Environment — never commit real values
+.env
+.env.local
+.env.*.local
+
+# TLS keys — NEVER commit these
+certs/
+*.key
+*.pem
+
+# IDE / OS
+.DS_Store
+.idea/
+.vscode/
+*.suo
+*.sw?
+
+# Logs
+*.log
+npm-debug.log*
+
+# Planning / design docs (not code)
+*.docx
+*.pdf
+*.docs
+brainstorm.txt
+scratch_prd.txt
+GEMINI.md
+AGENTS.md
+AI_*
+ALLIN*
+project_tracker.md

@@ -1,0 +1,319 @@
+generator client {
+  provider = "prisma-client-js"
+}
+
+datasource db {
+  provider = "postgresql"
+  url      = env("DATABASE_URL")
+}
+
+enum Role {
+  SUPER_ADMIN
+  PROPERTY_MANAGER
+  FRONT_DESK
+  HOUSEKEEPING
+  MAINTENANCE
+  SECURITY
+}
+
+enum UserStatus {
+  ACTIVE
+  INACTIVE
+  SUSPENDED
+}
+
+enum RoomStatus {
+  VACANT_CLEAN
+  VACANT_DIRTY
+  OCCUPIED_CLEAN
+  OCCUPIED_DIRTY
+  OUT_OF_ORDER
+  MAINTENANCE_REQUIRED
+}
+
+enum DeviceType {
+  PIR
+  DOOR
+  TEMPERATURE
+  RELAY
+  GATEWAY
+  SMOKE
+  WATER_LEAK
+  PANIC_BUTTON
+}
+
+enum DeviceStatus {
+  ONLINE
+  OFFLINE
+  DEGRADED
+  UNPROVISIONED
+}
+
+enum TaskStatus {
+  PENDING
+  ASSIGNED
+  IN_PROGRESS
+  INSPECTION
+  COMPLETED
+  CANCELLED
+}
+
+enum Priority {
+  LOW
+  MEDIUM
+  HIGH
+  CRITICAL
+}
+
+enum TicketStatus {
+  OPEN
+  ASSIGNED
+  IN_PROGRESS
+  PENDING_PARTS
+  RESOLVED
+  CLOSED
+}
+
+enum AlertType {
+  SMOKE
+  FIRE
+  MEDICAL
+  PANIC
+  INTRUSION
+  WATER_LEAK
+  DEVICE_FAILURE
+}
+
+enum AlertStatus {
+  ACTIVE
+  ACKNOWLEDGED
+  ESCALATED
+  RESOLVED
+  FALSE_ALARM
+}
+
+model User {
+  id                  String               @id @default(uuid())
+  email               String               @unique
+  passwordHash        String
+  firstName           String
+  lastName            String
+  role                Role
+  status              UserStatus           @default(ACTIVE)
+  propertyId          String?
+  property            Property?            @relation(fields: [propertyId], references: [id], onDelete: SetNull)
+  lastLoginAt         DateTime?
+  createdAt           DateTime             @default(now())
+  updatedAt           DateTime             @updatedAt
+
+  refreshTokens       RefreshToken[]
+  passwordResetTokens PasswordResetToken[]
+  auditLogs           AuditLog[]           @relation("UserAuditLogs")
+  assignedTasks       HousekeepingTask[]   @relation("AssignedHousekeeper")
+  inspectedTasks      HousekeepingTask[]   @relation("InspectedSupervisor")
+  maintenanceTickets  MaintenanceTicket[]  @relation("AssignedTechnician")
+
+  @@index([email])
+  @@index([role])
+  @@index([propertyId])
+}
+
+model RefreshToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isRevoked Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+model PasswordResetToken {
+  id        String   @id @default(uuid())
+  tokenHash String   @unique
+  userId    String
+  user      User     @relation(fields: [userId], references: [id], onDelete: Cascade)
+  isUsed    Boolean  @default(false)
+  expiresAt DateTime
+  createdAt DateTime @default(now())
+
+  @@index([userId])
+  @@index([tokenHash])
+}
+
+model AuditLog {
+  id         String   @id @default(uuid())
+  actorId    String?
+  actorEmail String?
+  actorRole  Role?
+  actor      User?    @relation("UserAuditLogs", fields: [actorId], references: [id], onDelete: SetNull)
+  action     String
+  resource   String
+  resourceId String?
+  metadata   Json?
+  ipAddress  String?
+  userAgent  String?
+  createdAt  DateTime @default(now())
+
+  @@index([actorId])
+  @@index([action])
+  @@index([resource])
+  @@index([createdAt])
+}
+
+model Property {
+  id          String   @id @default(uuid())
+  name        String
+  code        String   @unique
+  address     String
+  city        String
+  country     String
+  createdAt   DateTime @default(now())
+  updatedAt   DateTime @updatedAt
+
+  users       User[]
+  buildings   Building[]
+  rooms       Room[]
+  devices     Device[]
+}
+
+model Building {
+  id         String   @id @default(uuid())
+  name       String
+  propertyId String
+  property   Property @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  floors     Floor[]
+  rooms      Room[]
+
+  @@unique([propertyId, name])
+}
+
+model Floor {
+  id         String   @id @default(uuid())
+  number     Int
+  name       String?
+  buildingId String
+  building   Building @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  createdAt  DateTime @default(now())
+  updatedAt  DateTime @updatedAt
+
+  rooms      Room[]
+
+  @@unique([buildingId, number])
+}
+
+model Room {
+  id             String             @id @default(uuid())
+  number         String
+  propertyId     String
+  property       Property           @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  buildingId     String
+  building       Building           @relation(fields: [buildingId], references: [id], onDelete: Cascade)
+  floorId        String
+  floor          Floor              @relation(fields: [floorId], references: [id], onDelete: Cascade)
+  status         RoomStatus         @default(VACANT_CLEAN)
+  isDndActive    Boolean            @default(false)
+  dndActivatedAt DateTime?
+  maxOccupancy   Int                @default(2)
+  currentOccupancy Int              @default(0)
+  createdAt      DateTime           @default(now())
+  updatedAt      DateTime           @updatedAt
+
+  devices        Device[]
+  tasks          HousekeepingTask[]
+  tickets        MaintenanceTicket[]
+  alerts         EmergencyAlert[]
+
+  @@unique([propertyId, number])
+  @@index([propertyId])
+  @@index([status])
+}
+
+model Device {
+  id              String       @id
+  macAddress      String?      @unique
+  type            DeviceType
+  status          DeviceStatus @default(UNPROVISIONED)
+  propertyId      String
+  property        Property     @relation(fields: [propertyId], references: [id], onDelete: Cascade)
+  roomId          String?
+  room            Room?        @relation(fields: [roomId], references: [id], onDelete: SetNull)
+  firmwareVersion String?
+  lastHeartbeatAt DateTime?
+  metadata        Json?
+  createdAt       DateTime     @default(now())
+  updatedAt       DateTime     @updatedAt
+
+  @@index([propertyId])
+  @@index([roomId])
+  @@index([status])
+}
+
+model HousekeepingTask {
+  id           String     @id @default(uuid())
+  roomId       String
+  room         Room       @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  assignedToId String?
+  assignedTo   User?      @relation("AssignedHousekeeper", fields: [assignedToId], references: [id], onDelete: SetNull)
+  inspectedById String?
+  inspectedBy  User?      @relation("InspectedSupervisor", fields: [inspectedById], references: [id], onDelete: SetNull)
+  status       TaskStatus @default(PENDING)
+  priority     Priority   @default(MEDIUM)
+  startedAt    DateTime?
+  completedAt  DateTime?
+  inspectedAt  DateTime?
+  notes        String?
+  createdAt    DateTime   @default(now())
+  updatedAt    DateTime   @updatedAt
+
+  @@index([roomId])
+  @@index([assignedToId])
+  @@index([status])
+}
+
+model MaintenanceTicket {
+  id           String       @id @default(uuid())
+  roomId       String
+  room         Room         @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  assignedToId String?
+  assignedTo   User?        @relation("AssignedTechnician", fields: [assignedToId], references: [id], onDelete: SetNull)
+  title        String
+  description  String
+  status       TicketStatus @default(OPEN)
+  priority     Priority     @default(MEDIUM)
+  category     String
+  resolvedAt   DateTime?
+  closedAt     DateTime?
+  createdAt    DateTime     @default(now())
+  updatedAt    DateTime     @updatedAt
+
+  @@index([roomId])
+  @@index([assignedToId])
+  @@index([status])
+}
+
+model EmergencyAlert {
+  id           String      @id @default(uuid())
+  roomId       String
+  room         Room        @relation(fields: [roomId], references: [id], onDelete: Cascade)
+  type         AlertType
+  status       AlertStatus @default(ACTIVE)
+  level        Int         @default(1)
+  description  String?
+  triggeredAt  DateTime    @default(now())
+  resolvedAt   DateTime?
+  acknowledgedAt DateTime?
+  metadata     Json?
+  createdAt    DateTime    @default(now())
+  updatedAt    DateTime    @updatedAt
+
+  @@index([roomId])
+  @@index([type])
+  @@index([status])
+}
