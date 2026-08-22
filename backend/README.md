@@ -6,13 +6,25 @@ The primary documentation and company-level system overview is maintained at the
 
 ---
 
-### Quick Backend Commands
+## 📚 Authoritative Architecture & Contract Documentation
+
+- **[REST API Reference Guide](./docs/api-documentation.md)** — Complete HTTP endpoints, request/response payloads, status codes, and state transition matrix.
+- **[MQTT Broker & Telemetry Contract](./docs/mqtt-contract.md)** — Authoritative topic taxonomy, ESP32 payload formats, QoS, and boundary rules.
+- **[Engineering & Architecture Lawbook (`AGENTS.md`)](./AGENTS.md)** — Non-negotiable architectural invariants, validation rules, error handling, and testing bars.
+
+---
+
+## ⚡ Quick Backend Commands
+
 ```bash
 # Install dependencies
 bun install
 
 # Run database migrations
 npx prisma migrate dev
+
+# Seed database with sample hotel, users, and rooms
+bun run seed
 
 # Run unit tests
 bun run test
@@ -22,6 +34,7 @@ bun run test:cov
 
 # Run development server
 bun run start:dev
-```
 
-For engineering rules, conventions, validation guidelines, and testing requirements, see [**`AGENTS.md`**](./AGENTS.md) and [**`docs/mqtt-contract.md`**](./docs/mqtt-contract.md).
+# Interactive OpenAPI / Swagger UI
+# http://localhost:3000/docs
+```

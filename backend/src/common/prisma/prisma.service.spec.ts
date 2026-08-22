@@ -13,8 +13,13 @@ describe('PrismaService', () => {
     expect(connectSpy).toHaveBeenCalledTimes(1);
   });
 
-  it('should handle connection errors gracefully on init', async () => {
+  it('should handle Error instance connection failures on init', async () => {
     jest.spyOn(service, '$connect').mockRejectedValue(new Error('Connection failure'));
+    await expect(service.onModuleInit()).resolves.not.toThrow();
+  });
+
+  it('should handle non-Error connection failures on init', async () => {
+    jest.spyOn(service, '$connect').mockRejectedValue('String error failure');
     await expect(service.onModuleInit()).resolves.not.toThrow();
   });
 

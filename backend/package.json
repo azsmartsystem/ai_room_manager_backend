@@ -1,7 +1,7 @@
 {
   "name": "ai-room-manager-backend",
   "version": "0.1.0",
-  "description": "AI Room Manager \u2014 NestJS backend for IoT-connected hospitality operations",
+  "description": "AI Room Manager — NestJS backend for IoT-connected hospitality operations",
   "private": true,
   "license": "UNLICENSED",
   "scripts": {
@@ -15,7 +15,12 @@
     "test": "jest",
     "test:watch": "jest --watch",
     "test:cov": "jest --coverage",
-    "test:e2e": "jest --config ./test/jest-e2e.json"
+    "test:e2e": "jest --config ./test/jest-e2e.json",
+    "seed": "bun prisma/seed.ts",
+    "prepare": "cd .. && git config core.hooksPath backend/.husky"
+  },
+  "prisma": {
+    "seed": "bun prisma/seed.ts"
   },
   "dependencies": {
     "@nestjs/common": "^10.4.15",
@@ -44,6 +49,8 @@
     "on-finished": "^2.4.1"
   },
   "devDependencies": {
+    "@commitlint/cli": "^21.2.2",
+    "@commitlint/config-conventional": "^21.2.2",
     "@nestjs/cli": "^10.4.9",
     "@nestjs/schematics": "^10.2.3",
     "@nestjs/testing": "^10.4.15",
@@ -51,16 +58,18 @@
     "@types/express": "^4.17.21",
     "@types/jest": "^29.5.14",
     "@types/node": "^20.17.9",
+    "@types/on-finished": "^2.3.4",
     "@types/passport-jwt": "^4.0.1",
     "@types/passport-local": "^1.0.38",
     "@types/response-time": "^2.3.8",
-    "@types/on-finished": "^2.3.4",
     "@typescript-eslint/eslint-plugin": "^7.18.0",
     "@typescript-eslint/parser": "^7.18.0",
     "eslint": "^8.57.1",
     "eslint-config-prettier": "^9.1.0",
     "eslint-plugin-prettier": "^5.2.1",
+    "husky": "^9.1.7",
     "jest": "^29.7.0",
+    "lint-staged": "^17.3.0",
     "prettier": "^3.4.2",
     "prisma": "^5.22.0",
     "source-map-support": "^0.5.21",
@@ -86,7 +95,9 @@
       "**/*.(t|j)s",
       "!main.ts",
       "!**/*.module.ts",
+      "!**/*.controller.ts",
       "!**/*.dto.ts",
+      "!**/dto/**",
       "!**/*.schema.ts",
       "!**/*.entity.ts"
     ],

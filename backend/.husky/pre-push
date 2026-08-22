@@ -1,0 +1,7 @@
+(
+  cd backend && bun run test
+)
+
+if [ -d frontend ]; then
+  (cd frontend && bun run lint)
+fi

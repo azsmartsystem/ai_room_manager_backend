@@ -53,6 +53,13 @@ export class UsersService {
     });
   }
 
+  async findUsers(propertyId?: string): Promise<User[]> {
+    return this.prisma.user.findMany({
+      where: propertyId ? { propertyId } : undefined,
+      orderBy: { createdAt: 'desc' },
+    });
+  }
+
   async findById(id: string): Promise<User> {
     const user = await this.prisma.user.findUnique({
       where: { id },

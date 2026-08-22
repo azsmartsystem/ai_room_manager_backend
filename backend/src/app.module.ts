@@ -5,9 +5,9 @@ import { PrismaModule } from './common/prisma/prisma.module';
 import { AuditModule } from './audit/audit.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
+import { PropertiesModule } from './properties/properties.module';
 
 // Future feature modules — uncomment each as implemented:
-// import { PropertiesModule } from './properties/properties.module';
 // import { OccupancyModule } from './occupancy/occupancy.module';
 // import { HousekeepingModule } from './housekeeping/housekeeping.module';
 // import { MaintenanceModule } from './maintainance/maintainance.module';
@@ -25,6 +25,7 @@ import { AuthModule } from './auth/auth.module';
     AuditModule,
     UsersModule,
     AuthModule,
+    PropertiesModule,
     EventEmitterModule.forRoot({ wildcard: true }),
   ],
 })
