@@ -31,10 +31,11 @@ describe('AuthService', () => {
     };
   };
   let usersService: {
+    create: jest.Mock;
     findByEmail: jest.Mock;
     findById: jest.Mock;
-    updateLastLogin: jest.Mock;
     updatePassword: jest.Mock;
+    updateLastLogin: jest.Mock;
   };
   let jwtService: {
     sign: jest.Mock;
@@ -63,6 +64,7 @@ describe('AuthService', () => {
     };
 
     usersService = {
+      create: jest.fn(),
       findByEmail: jest.fn(),
       findById: jest.fn(),
       updateLastLogin: jest.fn(),
@@ -98,6 +100,35 @@ describe('AuthService', () => {
 
   it('should be defined', () => {
     expect(service).toBeDefined();
+  });
+
+  describe('register', () => {
+    it('should register a new user and return tokens and user', async () => {
+      const mockCreated = {
+        id: 'u-reg',
+        email: 'newuser@hotel.com',
+        role: Role.FRONT_DESK,
+        propertyId: 'prop-1',
+        status: UserStatus.ACTIVE,
+      };
+      usersService.create = jest.fn().mockResolvedValue(mockCreated);
+      prisma.refreshToken.create.mockResolvedValue({ id: 'rt-1' });
+
+      const result = await service.register({
+        email: 'newuser@hotel.com',
+        password: 'Password123!',
+        firstName: 'New',
+        lastName: 'User',
+        role: 'FRONT_DESK',
+        propertyId: 'prop-1',
+      });
+
+      expect(usersService.create).toHaveBeenCalled();
+      expect(jwtService.sign).toHaveBeenCalled();
+      expect(prisma.refreshToken.create).toHaveBeenCalled();
+      expect(result.accessToken).toBe('mock_jwt_access_token');
+      expect(result.user.id).toBe('u-reg');
+    });
   });
 
   describe('login', () => {

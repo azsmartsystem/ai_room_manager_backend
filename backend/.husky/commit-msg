@@ -1,0 +1,2 @@
+GIT_DIR=$(git rev-parse --absolute-git-dir)
+cd backend && ./node_modules/.bin/commitlint --edit "$GIT_DIR/COMMIT_EDITMSG"

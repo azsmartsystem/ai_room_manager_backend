@@ -16,6 +16,7 @@ describe('UsersService', () => {
   let prisma: {
     user: {
       findUnique: jest.Mock;
+      findMany: jest.Mock;
       create: jest.Mock;
       update: jest.Mock;
     };
@@ -25,6 +26,7 @@ describe('UsersService', () => {
     prisma = {
       user: {
         findUnique: jest.fn(),
+        findMany: jest.fn(),
         create: jest.fn(),
         update: jest.fn(),
       },
@@ -99,6 +101,28 @@ describe('UsersService', () => {
         where: { email: 'test@hotel.com' },
       });
       expect(result).toEqual(mockUser);
+    });
+  });
+
+  describe('findUsers', () => {
+    it('should list all users without propertyId filter', async () => {
+      prisma.user.findMany = jest.fn().mockResolvedValue([{ id: 'u-1' }]);
+      const result = await service.findUsers();
+      expect(prisma.user.findMany).toHaveBeenCalledWith({
+        where: undefined,
+        orderBy: { createdAt: 'desc' },
+      });
+      expect(result).toHaveLength(1);
+    });
+
+    it('should list users scoped to propertyId', async () => {
+      prisma.user.findMany = jest.fn().mockResolvedValue([{ id: 'u-2' }]);
+      const result = await service.findUsers('prop-1');
+      expect(prisma.user.findMany).toHaveBeenCalledWith({
+        where: { propertyId: 'prop-1' },
+        orderBy: { createdAt: 'desc' },
+      });
+      expect(result).toHaveLength(1);
     });
   });
 

@@ -7,6 +7,7 @@ import { Role, UserStatus } from '@prisma/client';
 describe('AuthController', () => {
   let controller: AuthController;
   let authService: {
+    register: jest.Mock;
     login: jest.Mock;
     refreshToken: jest.Mock;
     logout: jest.Mock;
@@ -31,6 +32,7 @@ describe('AuthController', () => {
 
   beforeEach(async () => {
     authService = {
+      register: jest.fn(),
       login: jest.fn(),
       refreshToken: jest.fn(),
       logout: jest.fn(),
@@ -48,6 +50,34 @@ describe('AuthController', () => {
 
   it('should be defined', () => {
     expect(controller).toBeDefined();
+  });
+
+  describe('register', () => {
+    it('should delegate to authService.register', async () => {
+      const mockResult = {
+        accessToken: 'access_tok',
+        refreshToken: 'refresh_tok',
+        user: { id: 'u1', email: 'test@hotel.com', role: Role.SUPER_ADMIN },
+      };
+      authService.register.mockResolvedValue(mockResult);
+
+      const result = await controller.register(
+        {
+          email: 'test@hotel.com',
+          password: 'password123',
+          firstName: 'John',
+          lastName: 'Doe',
+          role: 'SUPER_ADMIN',
+        },
+        mockRequestWithHeader,
+      );
+
+      expect(authService.register).toHaveBeenCalledWith(
+        expect.objectContaining({ email: 'test@hotel.com' }),
+        { ipAddress: '192.168.1.1', userAgent: 'Jest-Agent' },
+      );
+      expect(result).toEqual(mockResult);
+    });
   });
 
   describe('login', () => {

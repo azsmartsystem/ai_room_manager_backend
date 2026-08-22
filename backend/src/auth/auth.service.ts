@@ -39,6 +39,59 @@ export class AuthService {
     return crypto.randomBytes(32).toString('hex');
   }
 
+  async register(
+    dto: import('../users/dto/create-user.dto').CreateUserDto,
+    context: AuthContext = {},
+  ) {
+    const user = await this.usersService.create(dto);
+
+    const payload = {
+      sub: user.id,
+      email: user.email,
+      role: user.role,
+      propertyId: user.propertyId,
+    };
+
+    const accessToken = this.jwtService.sign(payload, {
+      secret: this.config.jwtAccessSecret,
+      expiresIn: this.config.jwtAccessExpiresIn,
+    });
+
+    const rawRefreshToken = this.generateSecureRandomToken();
+    const tokenHash = this.hashToken(rawRefreshToken);
+
+    const refreshExpiry = new Date();
+    refreshExpiry.setDate(refreshExpiry.getDate() + 7);
+
+    await this.prisma.refreshToken.create({
+      data: {
+        userId: user.id,
+        tokenHash,
+        expiresAt: refreshExpiry,
+      },
+    });
+
+    await this.auditService.log({
+      actorId: user.id,
+      actorEmail: user.email,
+      actorRole: user.role,
+      action: 'USER_REGISTERED',
+      resource: 'AUTH',
+      resourceId: user.id,
+      ipAddress: context.ipAddress,
+      userAgent: context.userAgent,
+    });
+
+    // eslint-disable-next-line @typescript-eslint/no-unused-vars
+    const { passwordHash, ...safeUser } = user;
+
+    return {
+      accessToken,
+      refreshToken: rawRefreshToken,
+      user: safeUser,
+    };
+  }
+
   async login(dto: LoginDto, context: AuthContext = {}) {
     const user = await this.usersService.findByEmail(dto.email);
     if (!user || user.status !== UserStatus.ACTIVE) {

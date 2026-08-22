@@ -1,0 +1,6 @@
+{
+  "backend/**/*.{ts,js}": [
+    "backend/node_modules/.bin/eslint --fix --config backend/.eslintrc.js",
+    "backend/node_modules/.bin/prettier --write"
+  ]
+}
