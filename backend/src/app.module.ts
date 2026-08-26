@@ -6,10 +6,10 @@ import { AuditModule } from './audit/audit.module';
 import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { PropertiesModule } from './properties/properties.module';
+import { HousekeepingModule } from './housekeeping/housekeeping.module';
 
 // Future feature modules — uncomment each as implemented:
 // import { OccupancyModule } from './occupancy/occupancy.module';
-// import { HousekeepingModule } from './housekeeping/housekeeping.module';
 // import { MaintenanceModule } from './maintainance/maintainance.module';
 // import { DndModule } from './dnd/dnd.module';
 // import { EmergencyModule } from './emergency/emergency.module';
@@ -26,6 +26,7 @@ import { PropertiesModule } from './properties/properties.module';
     UsersModule,
     AuthModule,
     PropertiesModule,
+    HousekeepingModule,
     EventEmitterModule.forRoot({ wildcard: true }),
   ],
 })
