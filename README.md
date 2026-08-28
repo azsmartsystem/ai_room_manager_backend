@@ -1,11 +1,11 @@
 # 🏨 AI Room Manager — Enterprise IoT Hospitality Operations Platform
 
-[![CI/CD Pipeline](https://img.shields.io/badge/CI%2FCD-Passing-brightgreen.svg)]()
-[![Runtime](https://img.shields.io/badge/Runtime-Bun%201.3-black.svg)]()
-[![Framework](https://img.shields.io/badge/Framework-NestJS%2010-ea2849.svg)]()
-[![Language](https://img.shields.io/badge/Language-TypeScript%20Strict-blue.svg)]()
-[![Validation](https://img.shields.io/badge/Validation-TypeBox-blueviolet.svg)]()
-[![Coverage](https://img.shields.io/badge/Coverage-100%25%20Lines%20%7C%2084%25%20Branches-success.svg)]()
+![CI/CD Pipeline](https://img.shields.io/badge/CI%2FCD-Passing-brightgreen.svg)
+![Runtime](https://img.shields.io/badge/Runtime-Bun%201.3-black.svg)
+![Framework](https://img.shields.io/badge/Framework-NestJS%2010-ea2849.svg)
+![Language](https://img.shields.io/badge/Language-TypeScript%20Strict-blue.svg)
+![Validation](https://img.shields.io/badge/Validation-TypeBox-blueviolet.svg)
+![Coverage](https://img.shields.io/badge/Coverage-100%25%20Lines%20%7C%2084%25%20Branches-success.svg)
 
 > **Enterprise Engagement:** ALLINZUCOLSMART SYSTEMS LTD (via ZORACOM COMMUNICATIONS LTD)  
 > **Repository:** Backend Core & Real-Time IoT Integration Engine  
@@ -145,7 +145,7 @@ The backend and embedded firmware are developed as **independent repositories** 
 | **Execution Environment** | Cloud Linux (Docker / Node / Bun) | ESP32-WROOM / ESP32-S3 Microcontrollers |
 | **Network Layer** | Public Cloud / Private VPC | Local Wi-Fi / RS485 / Zigbee Mesh → Gateway |
 | **Shared Source of Truth** | [`backend/docs/mqtt-contract.md`](backend/docs/mqtt-contract.md) | Shared contract file |
-| **Contract Policy** | Any topic or payload change **requires simultaneous commit** in both repositories |
+| **Contract Policy** | Any topic or payload change **requires simultaneous commit** in both repositories | Both repos must update together |
 
 ---
 
@@ -155,7 +155,7 @@ The full, normative contract is documented in [**`backend/docs/mqtt-contract.md`
 
 ### 5.1. Topic Registry
 
-```
+```zsh
 hotel/{property_id}/room/{room_id}/sensor/{sensor_type}   -> Telemetry Ingestion (QoS 1)
 hotel/{property_id}/room/{room_id}/emergency              -> Life-Safety Alerts (QoS 2)
 hotel/{property_id}/gateway/{gateway_id}/heartbeat        -> Gateway & Health Telemetry (QoS 1)
@@ -166,6 +166,7 @@ hotel/{property_id}/room/{room_id}/ack/{action}           -> Edge Command Confir
 ### 5.2. Core Payload Schemas
 
 #### A. PIR Motion Telemetry
+
 ```json
 {
   "version": "1.0",
@@ -182,6 +183,7 @@ hotel/{property_id}/room/{room_id}/ack/{action}           -> Edge Command Confir
 ```
 
 #### B. Door Position Sensor
+
 ```json
 {
   "version": "1.0",
@@ -197,6 +199,7 @@ hotel/{property_id}/room/{room_id}/ack/{action}           -> Edge Command Confir
 ```
 
 #### C. Gateway Heartbeat (Online/Offline Tracking)
+
 ```json
 {
   "version": "1.0",
@@ -210,9 +213,11 @@ hotel/{property_id}/room/{room_id}/ack/{action}           -> Edge Command Confir
   "timestamp": "2026-08-21T16:00:30.000Z"
 }
 ```
+
 *Heartbeats fire every 30s. Missing 3 consecutive heartbeats (90s) marks the gateway `OFFLINE`.*
 
 #### D. Emergency Trigger (Smoke, Panic, Fire, Intrusion, Water Leak)
+
 ```json
 {
   "version": "1.0",
@@ -231,6 +236,7 @@ hotel/{property_id}/room/{room_id}/ack/{action}           -> Edge Command Confir
 ```
 
 #### E. Command & Acknowledgement Loop
+
 ```mermaid
 sequenceDiagram
     participant B as Backend Service
@@ -250,7 +256,7 @@ sequenceDiagram
 ## 6. Tech Stack & Non-Negotiable Engineering Standards
 
 | Layer | Technology |
-|---|---|
+| ----- | ------ |
 | **Runtime** | Bun 1.x (Ultra-fast package execution & test runner) |
 | **Framework** | NestJS 10 (Modular Enterprise TypeScript Framework) |
 | **Language** | TypeScript (Strict mode enabled — `noImplicitAny`, `exactOptionalPropertyTypes`) |
@@ -263,6 +269,7 @@ sequenceDiagram
 | **Testing** | Jest (Unit & Service specs) + Supertest (E2E) |
 
 ### Strict Quality Rules (per `backend/AGENTS.md`)
+
 - 🚫 **No `any`:** Strict types only. Use `unknown` + TypeBox narrowing.
 - 🚫 **No `console.log`:** Built-in NestJS `Logger` must be used everywhere with structured JSON context.
 - 🧪 **Mandatory Testing Thresholds:**
@@ -277,7 +284,7 @@ sequenceDiagram
 
 Tracked in detail in [**`backend/project_tracker.md`**](backend/project_tracker.md):
 
-```
+```markdown
 Milestone 1: Foundation & Core Architecture (Weeks 1–4)
 ├── ✅ Week 1: Project Scaffolding, Prisma Models, Auth & Access Control, Audit Log
 ├── ⏳ Week 2: Property & Multi-Tenant Hierarchy, Room State Machine
@@ -301,11 +308,13 @@ Milestone 3: Safety Systems, Launch & Handoff (Weeks 9–13)
 ## 8. Getting Started & Local Development
 
 ### Prerequisites
+
 - [Bun](https://bun.sh/) (v1.1+) or Node.js (v20+)
 - PostgreSQL (v14+)
 - An MQTT broker instance (e.g. Mosquitto, EMQX) for local ingestion testing
 
 ### Installation & Bootstrap
+
 ```bash
 # 1. Navigate to backend directory
 cd backend
@@ -326,6 +335,7 @@ bun run start:dev
 ```
 
 ### Running Test Suite & Coverage
+
 ```bash
 # Run unit tests
 bun run test
@@ -342,7 +352,7 @@ npx tsc --noEmit
 ## 9. Documentation Directory
 
 | Document | Description |
-|---|---|
+| ----- | ------ |
 | [`backend/AGENTS.md`](backend/AGENTS.md) | **Primary Rulebook:** Architectural patterns, strict TS rules, testing bars |
 | [`backend/project_tracker.md`](backend/project_tracker.md) | Engagement tracker: Weekly milestones, delivery dates, fee schedule |
 | [`backend/docs/mqtt-contract.md`](backend/docs/mqtt-contract.md) | Authoritative MQTT topic & payload contract shared with Firmware |

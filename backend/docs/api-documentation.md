@@ -407,3 +407,216 @@ stateDiagram-v2
 - **Endpoint:** `POST /api/v1/properties/rooms/:roomId/devices/:deviceId/unassign`
 - **Access:** `SUPER_ADMIN`, `PROPERTY_MANAGER`
 - **Response (`200 OK`):** Disconnects hardware binding and records action in the immutable audit log.
+
+---
+
+## 8. Housekeeping Workflow Endpoints (`/api/v1/properties/:propertyId/housekeeping`)
+
+The Housekeeping module manages the lifecycle of room turnaround and cleaning operations, dynamic staff dispatch, live cleaning progress tracking, supervisor sign-offs, and operational turnaround analytics.
+
+### 8.1 Housekeeping Task Lifecycle State Machine
+
+```mermaid
+stateDiagram-v2
+    [*] --> PENDING : Task Created
+    PENDING --> ASSIGNED : Assign Housekeeper
+    PENDING --> CANCELLED : Cancel Task
+    ASSIGNED --> IN_PROGRESS : Start Cleaning
+    ASSIGNED --> PENDING : Reassign / Unassign
+    ASSIGNED --> CANCELLED : Cancel Task
+    IN_PROGRESS --> INSPECTION : Cleaning Completed (Submit for Review)
+    IN_PROGRESS --> CANCELLED : Cancel Task
+    INSPECTION --> COMPLETED : Supervisor Passes Inspection (Room → VACANT_CLEAN)
+    INSPECTION --> IN_PROGRESS : Supervisor Fails Inspection (Re-clean)
+    COMPLETED --> [*] : Terminal State
+    CANCELLED --> [*] : Terminal State
+```
+
+#### Task Transition Rules:
+| From State | Allowed Target States | Trigger / Notes |
+|---|---|---|
+| `PENDING` | `ASSIGNED`, `CANCELLED` | Housekeeper assigned or task aborted |
+| `ASSIGNED` | `IN_PROGRESS`, `PENDING`, `CANCELLED` | Housekeeper starts, gets unassigned, or task aborted |
+| `IN_PROGRESS` | `INSPECTION`, `CANCELLED` | Cleaner submits for inspection |
+| `INSPECTION` | `COMPLETED`, `IN_PROGRESS` | Pass (promotes room to `VACANT_CLEAN`) or Fail (re-clean) |
+| `COMPLETED` | *None* | Terminal state |
+| `CANCELLED` | *None* | Terminal state |
+
+---
+
+### 8.2 Create Housekeeping Task
+- **Endpoint:** `POST /api/v1/properties/:propertyId/housekeeping/tasks`
+- **Access:** `SUPER_ADMIN`, `PROPERTY_MANAGER`, `FRONT_DESK`
+- **Description:** Creates a new task in `PENDING` status for a room.
+
+#### Request Body
+```json
+{
+  "roomId": "039c36b4-8ee7-4da3-aef3-a3d8442a8b94",
+  "priority": "HIGH",
+  "notes": "Deep clean required — previous guest stayed 14 days."
+}
+```
+*Note: `priority` is optional (`LOW`, `MEDIUM`, `HIGH`, `CRITICAL`; defaults to `MEDIUM`).*
+
+#### Response (`201 Created`)
+```json
+{
+  "id": "t1234567-89ab-cdef-0123-456789abcdef",
+  "roomId": "039c36b4-8ee7-4da3-aef3-a3d8442a8b94",
+  "assignedToId": null,
+  "inspectedById": null,
+  "status": "PENDING",
+  "priority": "HIGH",
+  "startedAt": null,
+  "completedAt": null,
+  "inspectedAt": null,
+  "notes": "Deep clean required — previous guest stayed 14 days.",
+  "createdAt": "2026-08-26T15:00:00.000Z",
+  "updatedAt": "2026-08-26T15:00:00.000Z",
+  "room": {
+    "id": "039c36b4-8ee7-4da3-aef3-a3d8442a8b94",
+    "number": "101",
+    "propertyId": "p1234567-89ab-cdef-0123-456789abcdef"
+  },
+  "assignedTo": null,
+  "inspectedBy": null
+}
+```
+
+---
+
+### 8.3 List Tasks
+- **Endpoint:** `GET /api/v1/properties/:propertyId/housekeeping/tasks`
+- **Access:** `SUPER_ADMIN`, `PROPERTY_MANAGER`, `FRONT_DESK`, `HOUSEKEEPING`, `SECURITY`
+- **Query Parameters:**
+  - `status` (optional): Filter by `PENDING`, `ASSIGNED`, `IN_PROGRESS`, `INSPECTION`, `COMPLETED`, `CANCELLED`
+  - `assignedToId` (optional): Filter by assigned housekeeper UUID
+  - `roomId` (optional): Filter by room UUID
+
+#### Response (`200 OK`)
+```json
+[
+  {
+    "id": "t1234567-89ab-cdef-0123-456789abcdef",
+    "roomId": "039c36b4-8ee7-4da3-aef3-a3d8442a8b94",
+    "assignedToId": "u9876543-21ba-dcfe-3210-fedcba987654",
+    "status": "ASSIGNED",
+    "priority": "HIGH",
+    "room": { "id": "...", "number": "101", "propertyId": "..." },
+    "assignedTo": {
+      "id": "u9876543-21ba-dcfe-3210-fedcba987654",
+      "firstName": "Amina",
+      "lastName": "Bello",
+      "email": "cleaner1@grandroyal.com",
+      "role": "HOUSEKEEPING"
+    },
+    "createdAt": "2026-08-26T15:00:00.000Z"
+  }
+]
+```
+
+---
+
+### 8.4 Get Single Task
+- **Endpoint:** `GET /api/v1/properties/:propertyId/housekeeping/tasks/:taskId`
+- **Access:** All Authenticated Staff (except `MAINTENANCE`)
+- **Response (`200 OK`):** Returns full task details including populated room, assigned housekeeper, and inspecting supervisor.
+
+---
+
+### 8.5 Assign / Reassign Task
+- **Endpoint:** `PATCH /api/v1/properties/:propertyId/housekeeping/tasks/:taskId/assign`
+- **Access:** `SUPER_ADMIN`, `PROPERTY_MANAGER`
+- **Description:** Assigns task to a staff member with role `HOUSEKEEPING`. If previously assigned, handles re-assignment smoothly.
+
+#### Request Body
+```json
+{
+  "assignedToId": "u9876543-21ba-dcfe-3210-fedcba987654"
+}
+```
+
+#### Response (`200 OK`)
+Task transitions to `ASSIGNED`.
+
+---
+
+### 8.6 Start Task
+- **Endpoint:** `PATCH /api/v1/properties/:propertyId/housekeeping/tasks/:taskId/start`
+- **Access:** `SUPER_ADMIN`, `PROPERTY_MANAGER`, `HOUSEKEEPING`
+- **Description:** Transitions task from `ASSIGNED` to `IN_PROGRESS` and stamps `startedAt` with current UTC timestamp.
+
+#### Response (`200 OK`)
+
+---
+
+### 8.7 Submit Task for Inspection
+- **Endpoint:** `PATCH /api/v1/properties/:propertyId/housekeeping/tasks/:taskId/submit`
+- **Access:** `SUPER_ADMIN`, `PROPERTY_MANAGER`, `HOUSEKEEPING`
+- **Description:** Housekeeper signals cleaning completion. Transitions `IN_PROGRESS` to `INSPECTION`.
+
+#### Request Body (Optional)
+```json
+{
+  "notes": "Cleaning done, fresh linen and amenities replaced."
+}
+```
+
+#### Response (`200 OK`)
+
+---
+
+### 8.8 Inspect Task (Supervisor Sign-off)
+- **Endpoint:** `PATCH /api/v1/properties/:propertyId/housekeeping/tasks/:taskId/inspect`
+- **Access:** `SUPER_ADMIN`, `PROPERTY_MANAGER`
+- **Description:** Supervisor signs off on cleaning quality.
+  - **Passed (`true`):** Task transitions to `COMPLETED`, stamps `completedAt` and `inspectedAt`, and **automatically promotes the associated room to `VACANT_CLEAN`**.
+  - **Failed (`false`):** Task transitions back to `IN_PROGRESS` for re-cleaning.
+
+#### Request Body
+```json
+{
+  "passed": true,
+  "notes": "Passes 5-star standard inspection."
+}
+```
+
+#### Response (`200 OK`)
+
+---
+
+### 8.9 Cancel Task
+- **Endpoint:** `PATCH /api/v1/properties/:propertyId/housekeeping/tasks/:taskId/cancel`
+- **Access:** `SUPER_ADMIN`, `PROPERTY_MANAGER`
+- **Description:** Cancels task (only allowed on non-completed tasks).
+
+---
+
+### 8.10 Operational Metrics & Turnaround Reporting
+- **Endpoint:** `GET /api/v1/properties/:propertyId/housekeeping/metrics`
+- **Access:** `SUPER_ADMIN`, `PROPERTY_MANAGER`
+- **Description:** Provides real-time operational efficiency insights, backlog counts, average cleaning turnaround times (minutes), and individual housekeeper performance metrics.
+
+#### Response (`200 OK`)
+```json
+{
+  "backlog": 4,
+  "completedCount": 28,
+  "avgTurnaroundMinutes": 32.5,
+  "staffPerformance": [
+    {
+      "userId": "u9876543-21ba-dcfe-3210-fedcba987654",
+      "fullName": "Amina Bello",
+      "completedTasks": 15,
+      "avgTurnaroundMinutes": 28.4
+    },
+    {
+      "userId": "u1234567-43ba-dcfe-5678-fedcba123456",
+      "fullName": "Chinedu Okafor",
+      "completedTasks": 13,
+      "avgTurnaroundMinutes": 37.2
+    }
+  ]
+}
+```
