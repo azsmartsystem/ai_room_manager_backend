@@ -620,3 +620,131 @@ Task transitions to `ASSIGNED`.
   ]
 }
 ```
+
+---
+
+## 9. IoT Device Registry & Actuator Command Endpoints (`/api/v1/devices`)
+
+The Devices module manages hardware provisioning, room device bindings, heartbeat health monitoring, liveness detection, and downstream command publishing over MQTT.
+
+### 9.1 Provision New Device
+- **Endpoint:** `POST /api/v1/devices`
+- **Access:** `SUPER_ADMIN`, `PROPERTY_MANAGER`
+- **Description:** Registers a physical sensor, relay, or gateway node in the system.
+
+#### Request Body
+```json
+{
+  "id": "pir_esp32_01_a9f2",
+  "macAddress": "98:CD:AC:12:34:56",
+  "type": "PIR",
+  "propertyId": "p1234567-89ab-cdef-0123-456789abcdef",
+  "roomId": "r1234567-89ab-cdef-0123-456789abcdef",
+  "firmwareVersion": "v2.1.4-prod",
+  "metadata": {
+    "zone": "BEDROOM_CEILING",
+    "sensitivity": "HIGH"
+  }
+}
+```
+*Note: `type` can be `PIR`, `DOOR`, `TEMPERATURE`, `RELAY`, `GATEWAY`, `SMOKE`, `WATER_LEAK`, `PANIC_BUTTON`.*
+
+#### Response (`201 Created`)
+```json
+{
+  "id": "pir_esp32_01_a9f2",
+  "macAddress": "98:CD:AC:12:34:56",
+  "type": "PIR",
+  "status": "UNPROVISIONED",
+  "propertyId": "p1234567-89ab-cdef-0123-456789abcdef",
+  "roomId": "r1234567-89ab-cdef-0123-456789abcdef",
+  "firmwareVersion": "v2.1.4-prod",
+  "lastHeartbeatAt": null,
+  "metadata": { "zone": "BEDROOM_CEILING" },
+  "createdAt": "2026-09-01T16:00:00.000Z",
+  "updatedAt": "2026-09-01T16:00:00.000Z"
+}
+```
+
+---
+
+### 9.2 List Devices
+- **Endpoint:** `GET /api/v1/devices`
+- **Access:** `SUPER_ADMIN`, `PROPERTY_MANAGER`, `FRONT_DESK`, `MAINTENANCE`, `SECURITY`
+- **Query Parameters:**
+  - `propertyId` (optional)
+  - `roomId` (optional)
+  - `status` (optional: `ONLINE`, `OFFLINE`, `DEGRADED`, `UNPROVISIONED`)
+  - `type` (optional: `PIR`, `DOOR`, `TEMPERATURE`, `RELAY`, `GATEWAY`, etc.)
+
+---
+
+### 9.3 Get Single Device Details
+- **Endpoint:** `GET /api/v1/devices/:id`
+- **Access:** All Authenticated Staff
+- **Response (`200 OK`):** Returns complete device state including connected room, property, last heartbeat timestamp, and telemetry metadata.
+
+---
+
+### 9.4 Update Device
+- **Endpoint:** `PATCH /api/v1/devices/:id`
+- **Access:** `SUPER_ADMIN`, `PROPERTY_MANAGER`
+- **Description:** Updates device properties, room assignment, firmware version tag, or operational status.
+
+#### Request Body
+```json
+{
+  "status": "ONLINE",
+  "roomId": "r1234567-89ab-cdef-0123-456789abcdef",
+  "firmwareVersion": "v2.2.0-prod"
+}
+```
+
+---
+
+### 9.5 De-provision / Remove Device
+- **Endpoint:** `DELETE /api/v1/devices/:id`
+- **Access:** `SUPER_ADMIN`, `PROPERTY_MANAGER`
+- **Response (`200 OK`):** Removes device record and logs action in the immutable audit log.
+
+---
+
+### 9.6 Dispatch Control Command (Actuators / Relays)
+- **Endpoint:** `POST /api/v1/devices/:id/commands`
+- **Access:** `SUPER_ADMIN`, `PROPERTY_MANAGER`, `MAINTENANCE`
+- **Description:** Publishes a command payload over MQTT to the target room device via topic `hotel/{propertyId}/room/{roomId}/command/{action}`.
+
+#### Request Body
+```json
+{
+  "action": "set_relay",
+  "parameters": {
+    "channel": 1,
+    "state": "ON"
+  },
+  "expiresAt": "2026-09-01T16:05:00.000Z"
+}
+```
+
+#### Response (`200 OK`)
+```json
+{
+  "commandId": "cmd_8719238472_1725206400000",
+  "status": "DISPATCHED"
+}
+```
+
+---
+
+### 9.7 Heartbeat Liveness Check
+- **Endpoint:** `POST /api/v1/devices/check-liveness`
+- **Access:** `SUPER_ADMIN`, `PROPERTY_MANAGER`
+- **Description:** Scans active devices and flags any device with missing heartbeats (>90 seconds) to `OFFLINE`.
+
+#### Response (`200 OK`)
+```json
+{
+  "status": "OK",
+  "offlineDevicesCount": 2
+}
+```

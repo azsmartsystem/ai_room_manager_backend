@@ -99,6 +99,7 @@
       "!**/*.dto.ts",
       "!**/dto/**",
       "!**/*.schema.ts",
+      "!**/*.config.ts",
       "!**/*.entity.ts"
     ],
     "coverageDirectory": "../coverage",

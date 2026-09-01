@@ -7,6 +7,7 @@ import { UsersModule } from './users/users.module';
 import { AuthModule } from './auth/auth.module';
 import { PropertiesModule } from './properties/properties.module';
 import { HousekeepingModule } from './housekeeping/housekeeping.module';
+import { IotModule } from './iot/iot.module';
 
 // Future feature modules — uncomment each as implemented:
 // import { OccupancyModule } from './occupancy/occupancy.module';
@@ -16,7 +17,6 @@ import { HousekeepingModule } from './housekeeping/housekeeping.module';
 // import { NotificationsModule } from './notifications/notifications.module';
 // import { DashboardModule } from './dashboard/dashboard.module';
 // import { RealtimeModule } from './realtime/realtime.module';
-// import { IotModule } from './iot/iot.module';
 
 @Module({
   imports: [
@@ -27,6 +27,7 @@ import { HousekeepingModule } from './housekeeping/housekeeping.module';
     AuthModule,
     PropertiesModule,
     HousekeepingModule,
+    IotModule,
     EventEmitterModule.forRoot({ wildcard: true }),
   ],
 })
