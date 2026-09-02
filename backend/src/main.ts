@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
+import helmet from 'helmet';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
@@ -27,6 +28,9 @@ async function bootstrap(): Promise<void> {
 
   // ── CORS (tighten allowedOrigins in production via env var) ─────────────────
   app.enableCors();
+
+  // ── Security headers (Helmet) ───────────────────────────────────────────────
+  app.use(helmet());
 
   // ── API versioning prefix ───────────────────────────────────────────────────
   app.setGlobalPrefix('api/v1');

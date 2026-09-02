@@ -4,6 +4,7 @@ import { AppConfigService } from '../../config/config.service';
 import { UsersService } from '../../users/users.service';
 import { InvalidTokenException } from '../../common/exceptions/auth/invalid-token.exception';
 import { Role, UserStatus } from '@prisma/client';
+import { it, describe, beforeEach, jest, expect } from '@jest/globals';
 
 describe('JwtStrategy', () => {
   let strategy: JwtStrategy;
@@ -40,7 +41,7 @@ describe('JwtStrategy', () => {
       createdAt: new Date(),
       updatedAt: new Date(),
     };
-    usersService.findById.mockResolvedValue(mockUser);
+    usersService.findById.mockResolvedValue(mockUser as never);
 
     const payload: JwtPayload = { sub: 'u1', email: 'admin@hotel.com', role: 'SUPER_ADMIN' };
     const result = await strategy.validate(payload);
@@ -51,7 +52,7 @@ describe('JwtStrategy', () => {
   });
 
   it('should throw InvalidTokenException when user is inactive or not found', async () => {
-    usersService.findById.mockResolvedValue(null);
+    usersService.findById.mockResolvedValue(null as never);
 
     const payload: JwtPayload = { sub: 'u1', email: 'admin@hotel.com', role: 'SUPER_ADMIN' };
     await expect(strategy.validate(payload)).rejects.toThrow(InvalidTokenException);

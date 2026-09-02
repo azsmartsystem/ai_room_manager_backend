@@ -3,6 +3,7 @@ import { AuthController } from './auth.controller';
 import { AuthService } from './auth.service';
 import { Request } from 'express';
 import { Role, UserStatus } from '@prisma/client';
+import { it, describe, beforeEach, jest, expect } from '@jest/globals';
 
 describe('AuthController', () => {
   let controller: AuthController;
@@ -59,7 +60,7 @@ describe('AuthController', () => {
         refreshToken: 'refresh_tok',
         user: { id: 'u1', email: 'test@hotel.com', role: Role.SUPER_ADMIN },
       };
-      authService.register.mockResolvedValue(mockResult);
+      authService.register.mockResolvedValue(mockResult as never);
 
       const result = await controller.register(
         {
@@ -87,7 +88,7 @@ describe('AuthController', () => {
         refreshToken: 'refresh_tok',
         user: { id: 'u1', email: 'test@hotel.com', role: Role.SUPER_ADMIN },
       };
-      authService.login.mockResolvedValue(mockResult);
+      authService.login.mockResolvedValue(mockResult as never);
 
       const result = await controller.login(
         { email: 'test@hotel.com', password: 'password123' },
@@ -102,7 +103,7 @@ describe('AuthController', () => {
     });
 
     it('should extract ip from socket.remoteAddress when header missing', async () => {
-      authService.login.mockResolvedValue({ accessToken: 'a', refreshToken: 'r' });
+      authService.login.mockResolvedValue({ accessToken: 'a', refreshToken: 'r' } as never);
 
       await controller.login(
         { email: 'test@hotel.com', password: 'password123' },
@@ -119,7 +120,7 @@ describe('AuthController', () => {
   describe('refresh', () => {
     it('should delegate to authService.refreshToken', async () => {
       const mockResult = { accessToken: 'new_acc', refreshToken: 'new_ref' };
-      authService.refreshToken.mockResolvedValue(mockResult);
+      authService.refreshToken.mockResolvedValue(mockResult as never);
 
       const result = await controller.refresh({ refreshToken: 'old_ref' }, mockRequestWithHeader);
 
@@ -133,7 +134,7 @@ describe('AuthController', () => {
 
   describe('logout', () => {
     it('should delegate to authService.logout with refreshToken', async () => {
-      authService.logout.mockResolvedValue({ success: true });
+      authService.logout.mockResolvedValue({ success: true } as never);
 
       const result = await controller.logout(
         'u1',
@@ -149,7 +150,7 @@ describe('AuthController', () => {
     });
 
     it('should delegate to authService.logout when body is empty', async () => {
-      authService.logout.mockResolvedValue({ success: true });
+      authService.logout.mockResolvedValue({ success: true } as never);
 
       const result = await controller.logout('u1', {}, mockRequestWithoutHeader);
 
@@ -163,7 +164,7 @@ describe('AuthController', () => {
 
   describe('requestPasswordReset', () => {
     it('should delegate to authService.requestPasswordReset', async () => {
-      authService.requestPasswordReset.mockResolvedValue({ success: true });
+      authService.requestPasswordReset.mockResolvedValue({ success: true } as never);
 
       const result = await controller.requestPasswordReset(
         { email: 'test@hotel.com' },
@@ -180,7 +181,7 @@ describe('AuthController', () => {
 
   describe('resetPassword', () => {
     it('should delegate to authService.resetPassword', async () => {
-      authService.resetPassword.mockResolvedValue({ success: true });
+      authService.resetPassword.mockResolvedValue({ success: true } as never);
 
       const result = await controller.resetPassword(
         { token: 'token123', newPassword: 'NewPassword999!' },
