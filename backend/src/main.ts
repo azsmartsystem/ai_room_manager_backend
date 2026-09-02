@@ -1,6 +1,7 @@
 import { NestFactory } from '@nestjs/core';
 import { Logger } from '@nestjs/common';
 import { Request, Response, NextFunction } from 'express';
+import helmet from 'helmet';
 import { DocumentBuilder, SwaggerModule } from '@nestjs/swagger';
 import { AppModule } from './app.module';
 import { GlobalExceptionFilter } from './common/filters/http-exception.filter';
@@ -27,6 +28,9 @@ async function bootstrap(): Promise<void> {
 
   // ── CORS (tighten allowedOrigins in production via env var) ─────────────────
   app.enableCors();
+
+  // ── Security headers (Helmet) ───────────────────────────────────────────────
+  app.use(helmet());
 
   // ── API versioning prefix ───────────────────────────────────────────────────
   app.setGlobalPrefix('api/v1');
@@ -65,10 +69,8 @@ async function bootstrap(): Promise<void> {
     .addTag('Auth', 'Authentication — login, token refresh, password reset')
     .addTag('Properties', 'Property, building, floor, and room hierarchy management')
     .addTag('Rooms', 'Room status and device assignment')
-    .addTag('Users', 'User management (coming soon)')
-    .addTag('IoT Devices', 'Device registration, assignment, and command dispatch')
-    .addTag('IoT Telemetry', 'Sensor ingestion, heartbeat, and device error events')
-    .addTag('Occupancy', 'Real-time occupancy tracking and limit enforcement')
+    .addTag('Users', 'User management and staff provisioning')
+    .addTag('Devices', 'IoT Device registry, liveness tracking, and command dispatch')
     .addTag('Housekeeping', 'Cleaning task lifecycle management')
     .addTag('Maintenance', 'Maintenance ticket lifecycle management')
     .addTag('DND', 'Do Not Disturb rule enforcement')

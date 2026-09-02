@@ -93,7 +93,7 @@ export class HousekeepingController {
     return this.housekeepingService.createTask(dto as CreateTaskDto, this.getActor(user));
   }
 
-  // ─── List Tasks ──────────────────────────────────────────────────────────────
+  // ─── List Tasks
 
   @Get('tasks')
   @Roles(Role.SUPER_ADMIN, Role.PROPERTY_MANAGER, Role.FRONT_DESK, Role.HOUSEKEEPING, Role.SECURITY)

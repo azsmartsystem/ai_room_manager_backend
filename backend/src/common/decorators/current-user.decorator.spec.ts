@@ -3,7 +3,7 @@ import { CurrentUser, AuthenticatedUser } from './current-user.decorator';
 import { ExecutionContext } from '@nestjs/common';
 import { Role, UserStatus } from '@prisma/client';
 
-function getParamDecoratorFactory(_decorator: (...args: unknown[]) => unknown) {
+function getParamDecoratorFactory(_decorator: unknown) {
   class TestController {
     public testMethod(@CurrentUser() _user: unknown, @CurrentUser('id') _id: unknown) {}
   }
