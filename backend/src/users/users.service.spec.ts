@@ -6,9 +6,11 @@ import { UserAlreadyExistsException } from '../common/exceptions/operations/user
 import { UserNotFoundException } from '../common/exceptions/operations/user-not-found.exception';
 import * as bcrypt from 'bcrypt';
 
+import { it, describe, beforeEach, jest, expect } from '@jest/globals';
+
 jest.mock('bcrypt', () => ({
-  hash: jest.fn().mockResolvedValue('hashed_password_123'),
-  compare: jest.fn().mockResolvedValue(true),
+  hash: jest.fn().mockResolvedValue('hashed_password_123' as never),
+  compare: jest.fn().mockResolvedValue(true as never),
 }));
 
 describe('UsersService', () => {
@@ -45,7 +47,7 @@ describe('UsersService', () => {
 
   describe('create', () => {
     it('should create a new user with hashed password', async () => {
-      prisma.user.findUnique.mockResolvedValue(null);
+      prisma.user.findUnique.mockResolvedValue(null as never);
       const mockCreated = {
         id: 'user-uuid-1',
         email: 'manager@hotel.com',
@@ -58,7 +60,7 @@ describe('UsersService', () => {
         createdAt: new Date(),
         updatedAt: new Date(),
       };
-      prisma.user.create.mockResolvedValue(mockCreated);
+      prisma.user.create.mockResolvedValue(mockCreated as never);
 
       const result = await service.create({
         email: 'manager@hotel.com',
@@ -77,7 +79,7 @@ describe('UsersService', () => {
     });
 
     it('should throw UserAlreadyExistsException if email already taken', async () => {
-      prisma.user.findUnique.mockResolvedValue({ id: 'existing-user-id' });
+      prisma.user.findUnique.mockResolvedValue({ id: 'existing-user-id' } as never);
 
       await expect(
         service.create({
@@ -94,7 +96,7 @@ describe('UsersService', () => {
   describe('findByEmail', () => {
     it('should return user if found', async () => {
       const mockUser = { id: 'u-1', email: 'test@hotel.com' };
-      prisma.user.findUnique.mockResolvedValue(mockUser);
+      prisma.user.findUnique.mockResolvedValue(mockUser as never);
 
       const result = await service.findByEmail('TEST@HOTEL.COM');
       expect(prisma.user.findUnique).toHaveBeenCalledWith({
@@ -106,7 +108,7 @@ describe('UsersService', () => {
 
   describe('findUsers', () => {
     it('should list all users without propertyId filter', async () => {
-      prisma.user.findMany = jest.fn().mockResolvedValue([{ id: 'u-1' }]);
+      prisma.user.findMany = jest.fn().mockResolvedValue([{ id: 'u-1' }] as never);
       const result = await service.findUsers();
       expect(prisma.user.findMany).toHaveBeenCalledWith({
         where: undefined,
@@ -116,7 +118,7 @@ describe('UsersService', () => {
     });
 
     it('should list users scoped to propertyId', async () => {
-      prisma.user.findMany = jest.fn().mockResolvedValue([{ id: 'u-2' }]);
+      prisma.user.findMany = jest.fn().mockResolvedValue([{ id: 'u-2' }] as never);
       const result = await service.findUsers('prop-1');
       expect(prisma.user.findMany).toHaveBeenCalledWith({
         where: { propertyId: 'prop-1' },
@@ -129,22 +131,22 @@ describe('UsersService', () => {
   describe('findById', () => {
     it('should return user if found', async () => {
       const mockUser = { id: 'u-1', email: 'test@hotel.com' };
-      prisma.user.findUnique.mockResolvedValue(mockUser);
+      prisma.user.findUnique.mockResolvedValue(mockUser as never);
 
       const result = await service.findById('u-1');
       expect(result).toEqual(mockUser);
     });
 
     it('should throw UserNotFoundException if not found', async () => {
-      prisma.user.findUnique.mockResolvedValue(null);
+      prisma.user.findUnique.mockResolvedValue(null as never);
       await expect(service.findById('non-existent')).rejects.toThrow(UserNotFoundException);
     });
   });
 
   describe('updatePassword', () => {
     it('should hash new password and update user record', async () => {
-      prisma.user.findUnique.mockResolvedValue({ id: 'u-1' });
-      prisma.user.update.mockResolvedValue({ id: 'u-1' });
+      prisma.user.findUnique.mockResolvedValue({ id: 'u-1' } as never);
+      prisma.user.update.mockResolvedValue({ id: 'u-1' } as never);
 
       await service.updatePassword('u-1', 'NewSecret999!');
 
@@ -158,7 +160,7 @@ describe('UsersService', () => {
 
   describe('updateLastLogin', () => {
     it('should update lastLoginAt field', async () => {
-      prisma.user.update.mockResolvedValue({ id: 'u-1' });
+      prisma.user.update.mockResolvedValue({ id: 'u-1' } as never);
 
       await service.updateLastLogin('u-1');
 
@@ -171,8 +173,8 @@ describe('UsersService', () => {
 
   describe('updateStatus', () => {
     it('should update user status', async () => {
-      prisma.user.findUnique.mockResolvedValue({ id: 'u-1', status: UserStatus.ACTIVE });
-      prisma.user.update.mockResolvedValue({ id: 'u-1', status: UserStatus.SUSPENDED });
+      prisma.user.findUnique.mockResolvedValue({ id: 'u-1', status: UserStatus.ACTIVE } as never);
+      prisma.user.update.mockResolvedValue({ id: 'u-1', status: UserStatus.SUSPENDED } as never);
 
       const result = await service.updateStatus('u-1', UserStatus.SUSPENDED);
 

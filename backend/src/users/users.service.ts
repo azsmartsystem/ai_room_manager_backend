@@ -13,6 +13,11 @@ export class UsersService {
 
   constructor(private readonly prisma: PrismaService) {}
 
+  /**
+   * Creates a new user
+   * @param dto CreateUserDto
+   * @returns Promise<User>
+   */
   async create(dto: CreateUserDto): Promise<User> {
     const existing = await this.prisma.user.findUnique({
       where: { email: dto.email.toLowerCase() },
@@ -47,12 +52,22 @@ export class UsersService {
     return user;
   }
 
+  /**
+   * Finds a user by email
+   * @param email string
+   * @returns Promise<User | null>
+   */
   async findByEmail(email: string): Promise<User | null> {
     return this.prisma.user.findUnique({
       where: { email: email.toLowerCase() },
     });
   }
 
+  /**
+   * Finds all users for a given property
+   * @param propertyId
+   * @returns
+   */
   async findUsers(propertyId?: string): Promise<User[]> {
     return this.prisma.user.findMany({
       where: propertyId ? { propertyId } : undefined,
@@ -60,6 +75,11 @@ export class UsersService {
     });
   }
 
+  /**
+   * Finds a user by ID
+   * @param id
+   * @returns
+   */
   async findById(id: string): Promise<User> {
     const user = await this.prisma.user.findUnique({
       where: { id },
@@ -72,6 +92,11 @@ export class UsersService {
     return user;
   }
 
+  /**
+   * Updates a user's password
+   * @param userId
+   * @param newPasswordPlain
+   */
   async updatePassword(userId: string, newPasswordPlain: string): Promise<void> {
     const user = await this.findById(userId);
     const passwordHash = await bcrypt.hash(newPasswordPlain, this.saltRounds);
@@ -87,6 +112,10 @@ export class UsersService {
     });
   }
 
+  /**
+   * Updates a user's last login timestamp
+   * @param userId
+   */
   async updateLastLogin(userId: string): Promise<void> {
     await this.prisma.user.update({
       where: { id: userId },
@@ -94,6 +123,12 @@ export class UsersService {
     });
   }
 
+  /**
+   * Updates a user's status
+   * @param userId
+   * @param status
+   * @returns
+   */
   async updateStatus(userId: string, status: UserStatus): Promise<User> {
     const user = await this.findById(userId);
     const updated = await this.prisma.user.update({

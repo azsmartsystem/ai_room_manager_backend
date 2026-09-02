@@ -9,9 +9,10 @@ import { Role, UserStatus } from '@prisma/client';
 import { InvalidCredentialsException } from '../common/exceptions/auth/invalid-credentials.exception';
 import { InvalidTokenException } from '../common/exceptions/auth/invalid-token.exception';
 import * as bcrypt from 'bcrypt';
+import { it, describe, beforeEach, jest, expect } from '@jest/globals';
 
 jest.mock('bcrypt', () => ({
-  hash: jest.fn().mockResolvedValue('hashed_secret_val'),
+  hash: jest.fn().mockResolvedValue('hashed_secret_val' as never),
   compare: jest.fn(),
 }));
 
@@ -81,7 +82,7 @@ describe('AuthService', () => {
     };
 
     auditService = {
-      log: jest.fn().mockResolvedValue({ id: 'audit-log-1' }),
+      log: jest.fn().mockResolvedValue({ id: 'audit-log-1' } as never),
     };
 
     const module: TestingModule = await Test.createTestingModule({
@@ -111,8 +112,8 @@ describe('AuthService', () => {
         propertyId: 'prop-1',
         status: UserStatus.ACTIVE,
       };
-      usersService.create = jest.fn().mockResolvedValue(mockCreated);
-      prisma.refreshToken.create.mockResolvedValue({ id: 'rt-1' });
+      usersService.create = jest.fn().mockResolvedValue(mockCreated as never);
+      prisma.refreshToken.create.mockResolvedValue({ id: 'rt-1' } as never);
 
       const result = await service.register({
         email: 'newuser@hotel.com',
@@ -144,9 +145,9 @@ describe('AuthService', () => {
     };
 
     it('should authenticate user and return tokens and user info', async () => {
-      usersService.findByEmail.mockResolvedValue(mockUser);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(true);
-      prisma.refreshToken.create.mockResolvedValue({ id: 'rt-1' });
+      usersService.findByEmail.mockResolvedValue(mockUser as never);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(true as never);
+      prisma.refreshToken.create.mockResolvedValue({ id: 'rt-1' } as never);
 
       const result = await service.login(
         { email: 'admin@hotel.com', password: 'ValidPassword123' },
@@ -175,7 +176,7 @@ describe('AuthService', () => {
     });
 
     it('should throw InvalidCredentialsException when user not found', async () => {
-      usersService.findByEmail.mockResolvedValue(null);
+      usersService.findByEmail.mockResolvedValue(null as never);
 
       await expect(
         service.login({ email: 'nonexistent@hotel.com', password: 'password' }),
@@ -186,7 +187,7 @@ describe('AuthService', () => {
       usersService.findByEmail.mockResolvedValue({
         ...mockUser,
         status: UserStatus.SUSPENDED,
-      });
+      } as never);
 
       await expect(
         service.login({ email: 'admin@hotel.com', password: 'password' }),
@@ -194,8 +195,8 @@ describe('AuthService', () => {
     });
 
     it('should throw InvalidCredentialsException when password does not match', async () => {
-      usersService.findByEmail.mockResolvedValue(mockUser);
-      (bcrypt.compare as jest.Mock).mockResolvedValue(false);
+      usersService.findByEmail.mockResolvedValue(mockUser as never);
+      (bcrypt.compare as jest.Mock).mockResolvedValue(false as never);
 
       await expect(
         service.login({ email: 'admin@hotel.com', password: 'WrongPassword' }),
@@ -222,10 +223,10 @@ describe('AuthService', () => {
         isRevoked: false,
         expiresAt: futureDate,
         user: activeUser,
-      });
+      } as never);
 
-      prisma.refreshToken.update.mockResolvedValue({ id: 'rt-old', isRevoked: true });
-      prisma.refreshToken.create.mockResolvedValue({ id: 'rt-new' });
+      prisma.refreshToken.update.mockResolvedValue({ id: 'rt-old', isRevoked: true } as never);
+      prisma.refreshToken.create.mockResolvedValue({ id: 'rt-new' } as never);
 
       const result = await service.refreshToken({ refreshToken: 'valid-refresh-token-string' });
 
@@ -254,8 +255,8 @@ describe('AuthService', () => {
         isRevoked: false,
         expiresAt: new Date(Date.now() + 10000),
         user: inactiveUser,
-      });
-      prisma.refreshToken.update.mockResolvedValue({ id: 'rt-old' });
+      } as never);
+      prisma.refreshToken.update.mockResolvedValue({ id: 'rt-old' } as never);
 
       await expect(service.refreshToken({ refreshToken: 'some-token' })).rejects.toThrow(
         InvalidTokenException,
@@ -267,7 +268,7 @@ describe('AuthService', () => {
         id: 'rt-revoked',
         isRevoked: true,
         expiresAt: new Date(Date.now() + 10000),
-      });
+      } as never);
 
       await expect(service.refreshToken({ refreshToken: 'revoked-token' })).rejects.toThrow(
         InvalidTokenException,
@@ -279,7 +280,7 @@ describe('AuthService', () => {
         id: 'rt-expired',
         isRevoked: false,
         expiresAt: new Date(Date.now() - 10000), // past
-      });
+      } as never);
 
       await expect(service.refreshToken({ refreshToken: 'expired-token' })).rejects.toThrow(
         InvalidTokenException,
@@ -293,7 +294,7 @@ describe('AuthService', () => {
         id: 'u-1',
         email: 'user@hotel.com',
         role: Role.FRONT_DESK,
-      });
+      } as never);
 
       const result = await service.logout('u-1', 'active-token');
 
@@ -309,7 +310,7 @@ describe('AuthService', () => {
         id: 'u-1',
         email: 'user@hotel.com',
         role: Role.FRONT_DESK,
-      });
+      } as never);
 
       const result = await service.logout('u-1');
 
@@ -325,8 +326,8 @@ describe('AuthService', () => {
         email: 'user@hotel.com',
         role: Role.FRONT_DESK,
         status: UserStatus.ACTIVE,
-      });
-      prisma.passwordResetToken.create.mockResolvedValue({ id: 'prt-1' });
+      } as never);
+      prisma.passwordResetToken.create.mockResolvedValue({ id: 'prt-1' } as never);
 
       const result = await service.requestPasswordReset({ email: 'user@hotel.com' });
 
@@ -339,7 +340,7 @@ describe('AuthService', () => {
     });
 
     it('should return generic success message when user not found to prevent user enumeration', async () => {
-      usersService.findByEmail.mockResolvedValue(null);
+      usersService.findByEmail.mockResolvedValue(null as never);
 
       const result = await service.requestPasswordReset({ email: 'unknown@hotel.com' });
 
@@ -353,7 +354,7 @@ describe('AuthService', () => {
         id: 'user-1',
         email: 'inactive@hotel.com',
         status: UserStatus.INACTIVE,
-      });
+      } as never);
 
       const result = await service.requestPasswordReset({ email: 'inactive@hotel.com' });
 
@@ -374,10 +375,10 @@ describe('AuthService', () => {
           role: Role.MAINTENANCE,
         },
       };
-      prisma.passwordResetToken.findUnique.mockResolvedValue(resetRecord);
-      prisma.passwordResetToken.update.mockResolvedValue({ ...resetRecord, isUsed: true });
-      usersService.updatePassword.mockResolvedValue(undefined);
-      prisma.refreshToken.updateMany.mockResolvedValue({ count: 2 });
+      prisma.passwordResetToken.findUnique.mockResolvedValue(resetRecord as never);
+      prisma.passwordResetToken.update.mockResolvedValue({ ...resetRecord, isUsed: true } as never);
+      usersService.updatePassword.mockResolvedValue(undefined as never);
+      prisma.refreshToken.updateMany.mockResolvedValue({ count: 2 } as never);
 
       const result = await service.resetPassword({
         token: 'valid-reset-token-plain',
@@ -404,7 +405,7 @@ describe('AuthService', () => {
         id: 'prt-1',
         isUsed: true, // already used
         expiresAt: new Date(Date.now() + 10000),
-      });
+      } as never);
 
       await expect(
         service.resetPassword({

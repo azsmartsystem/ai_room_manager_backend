@@ -7,6 +7,7 @@ import { UsersService } from '../users/users.service';
 import { AppConfigService } from '../config/config.service';
 import { AuditService } from '../audit/audit.service';
 import { LoginDto } from './dto/login.dto';
+import { CreateUserDto } from '../users/dto/create-user.dto';
 import { RefreshTokenDto } from './dto/refresh-token.dto';
 import { RequestPasswordResetDto } from './dto/request-password-reset.dto';
 import { ResetPasswordDto } from './dto/reset-password.dto';
@@ -31,18 +32,29 @@ export class AuthService {
     private readonly auditService: AuditService,
   ) {}
 
+  /**
+   * Hashes a token using SHA-256
+   * @param token
+   * @returns
+   */
   private hashToken(token: string): string {
     return crypto.createHash('sha256').update(token).digest('hex');
   }
 
+  /**
+   * Generates a secure random token for refresh tokens and password reset tokens
+   */
   private generateSecureRandomToken(): string {
     return crypto.randomBytes(32).toString('hex');
   }
 
-  async register(
-    dto: import('../users/dto/create-user.dto').CreateUserDto,
-    context: AuthContext = {},
-  ) {
+  /**
+   * Registers a new user
+   * @param dto
+   * @param context
+   * @returns
+   */
+  async register(dto: CreateUserDto, context: AuthContext = {}) {
     const user = await this.usersService.create(dto);
 
     const payload = {
@@ -92,6 +104,12 @@ export class AuthService {
     };
   }
 
+  /**
+   * Logs in a user
+   * @param dto
+   * @param context
+   * @returns
+   */
   async login(dto: LoginDto, context: AuthContext = {}) {
     const user = await this.usersService.findByEmail(dto.email);
     if (!user || user.status !== UserStatus.ACTIVE) {
@@ -164,6 +182,12 @@ export class AuthService {
     };
   }
 
+  /**
+   * Refreshes a user's access token
+   * @param dto RefreshTokenDto
+   * @param context AuthContext
+   * @returns
+   */
   async refreshToken(dto: RefreshTokenDto, context: AuthContext = {}) {
     const tokenHash = this.hashToken(dto.refreshToken);
 
@@ -260,6 +284,12 @@ export class AuthService {
     return { success: true, message: 'Logged out successfully' };
   }
 
+  /**
+   * Requests a password reset for a user by generating a secure token and storing its hash
+   * @param dto RequestPasswordResetDto
+   * @param context AuthContext
+   * @returns
+   */
   async requestPasswordReset(dto: RequestPasswordResetDto, context: AuthContext = {}) {
     const user = await this.usersService.findByEmail(dto.email);
 
@@ -302,6 +332,12 @@ export class AuthService {
     };
   }
 
+  /**
+   * Resets a user's password using a valid reset token
+   * @param dto ResetPasswordDto
+   * @param context AuthContext
+   * @returns
+   */
   async resetPassword(dto: ResetPasswordDto, context: AuthContext = {}) {
     const tokenHash = this.hashToken(dto.token);
 
