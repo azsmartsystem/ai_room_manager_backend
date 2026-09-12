@@ -8,10 +8,10 @@ import { AuthModule } from './auth/auth.module';
 import { PropertiesModule } from './properties/properties.module';
 import { HousekeepingModule } from './housekeeping/housekeeping.module';
 import { IotModule } from './iot/iot.module';
+import { MaintenanceModule } from './maintenance/maintainance.module';
+import { OccupancyModule } from './occupancy/occupancy.module';
 
 // Future feature modules — uncomment each as implemented:
-// import { OccupancyModule } from './occupancy/occupancy.module';
-// import { MaintenanceModule } from './maintainance/maintainance.module';
 // import { DndModule } from './dnd/dnd.module';
 // import { EmergencyModule } from './emergency/emergency.module';
 // import { NotificationsModule } from './notifications/notifications.module';
@@ -28,6 +28,8 @@ import { IotModule } from './iot/iot.module';
     PropertiesModule,
     HousekeepingModule,
     IotModule,
+    MaintenanceModule,
+    OccupancyModule,
     EventEmitterModule.forRoot({ wildcard: true }),
   ],
 })
